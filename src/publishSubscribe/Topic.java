@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class topic {
+public class Topic {
     private int port;
     private String pubHead;
     private String getHead;
@@ -19,7 +19,7 @@ public class topic {
     private String wrongHead;
     private int updateTime;
 
-    public topic() {
+    public Topic() {
         Properties pro = new Properties();
         try (FileInputStream fis = new FileInputStream("src/publishSubscribe/config.properties")) {
             pro.load(fis);
@@ -59,7 +59,7 @@ public class topic {
         try (ServerSocket ss = new ServerSocket(port);) {
             while (true) {
                 Socket socket = ss.accept();
-                topicProcess p = new topicProcess(socket, pubHead, getHead, subHead, completeHead,
+                TopicProcess p = new TopicProcess(socket, pubHead, getHead, subHead, completeHead,
                         wrongHead, updateTime);
                 new Thread(p).start();
             }
@@ -69,12 +69,12 @@ public class topic {
     }
 
     public static void main(String[] args) {
-        topic t = new topic();
+        Topic t = new Topic();
         t.start();
     }
 }
 
-class topicProcess implements Runnable{
+class TopicProcess implements Runnable{
     private final Socket socket;
     private final String pubHead;
     private final String getHead;
@@ -83,7 +83,7 @@ class topicProcess implements Runnable{
     private final String wrongHead;
     private final int updateTime;
 
-    public topicProcess(Socket socket, String pubHead, String getHead, String subHead, String completeHead,
+    public TopicProcess(Socket socket, String pubHead, String getHead, String subHead, String completeHead,
                         String wrongHead, int updateTime) {
         this.socket = socket;
         this.pubHead = pubHead;
@@ -96,15 +96,15 @@ class topicProcess implements Runnable{
 
     @Override
     public void run() {
-        storage.update();
+        Storage.update();
         try(ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());){
             Request req = (Request) ois.readObject();
             if (req.getHead().equals(pubHead)) {
                 System.out.println(">>> Successfully receive publish request");
-                storage.addMessage(req);
+                Storage.addMessage(req);
             } else if (req.getHead().equals(getHead)) {
                 System.out.println(">>> Successfully receive get request");
-                List<Request> res = storage.getMessage(req.getSource());
+                List<Request> res = Storage.getMessage(req.getSource());
 //                System.out.println(res);
                 if (res == null) {
                     ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
@@ -121,7 +121,7 @@ class topicProcess implements Runnable{
                     oos.writeObject(new Request(completeHead, "", "topic"));
                 }
             } else if (req.getHead().equals(subHead)) {
-                storage.accessSub(req.getSource(), req.getBody());
+                Storage.accessSub(req.getSource(), req.getBody());
                 System.out.println(">>> Successfully receive subscribe request");
             }
         }catch (Exception e){
@@ -130,7 +130,7 @@ class topicProcess implements Runnable{
     }
 }
 
-class storage{
+class Storage {
     private static Map<String, List<String>> subLists = new HashMap<>();
     private static Map<String, List<Request>> pubMsgs = new HashMap<>();
     private static Lock lock = new ReentrantLock();

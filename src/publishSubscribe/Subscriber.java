@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Scanner;
 
-public class subscriber {
+public class Subscriber {
     private String address;
     private int port;
     private String getHead;
@@ -19,7 +19,7 @@ public class subscriber {
     private String wrongHead;
     private final String id;
 
-    public subscriber(String id) {
+    public Subscriber(String id) {
         Properties pro = new Properties();
         this.id = id;
         try (FileInputStream fis = new FileInputStream("src/publishSubscribe/config.properties")) {
@@ -68,20 +68,20 @@ public class subscriber {
         }
     }
 
-    public void subscribe(String typeIn){
-        try (Socket s = new Socket(address, port);
-             ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());) {
-            oos.writeObject(new Request(subHead, typeIn, id));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public void subscribe(String typeIn){
+//        try (Socket s = new Socket(address, port);
+//             ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());) {
+//            oos.writeObject(new Request(subHead, typeIn, id));
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     public static void main(String[] args) {
         System.out.println("type in your subscriber id:");
         Scanner sc = new Scanner(System.in);
         String id = sc.nextLine();
-        subscriber s = new subscriber(id);
+        Subscriber s = new Subscriber(id);
         s.subscribe();
         s.getMsg();
     }
